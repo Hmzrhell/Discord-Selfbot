@@ -99,7 +99,6 @@ client.on('messageCreate', async (message) => {
 - purge <amount>
 - copy <msg_id>
 - vanish
-- embed <title> | <desc>
 
 **Logs & Auto**
 - removereply <trigger>
