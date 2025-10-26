@@ -20,7 +20,7 @@ This is a **selfbot** - it runs on a user account rather than a bot account. Usi
 
 1. Clone this repository:
 ```bash
-git clone https://github.com//discord-selfbot.git
+git clone https://github.com/Hmzrhell/discord-selfbot.git
 cd discord-selfbot
 ```
 
