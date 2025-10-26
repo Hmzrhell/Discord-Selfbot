@@ -35,7 +35,7 @@ client.on('ready', () => {
 });
 
 client.on('messageCreate', async (message) => {
-  if (message.author.id === client.user.id || message.author.bot) return;
+  if (message.author.bot) return;
   
   // Handle reactions and chatpack for any message
   if (reactionTargets.has(message.author.id)) {
