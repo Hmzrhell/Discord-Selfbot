@@ -35,7 +35,7 @@ client.on('ready', () => {
 });
 
 client.on('messageCreate', async (message) => {
-  if (message.author.bot) return;
+  if (message.author.id === client.user.id || message.author.bot) return;
   
   // Handle reactions and chatpack for any message
   if (reactionTargets.has(message.author.id)) {
@@ -75,46 +75,168 @@ client.on('messageCreate', async (message) => {
 
   try {
     if (command === 'cmds') {
-      await message.channel.send(`━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      const category = args[0];
+      
+      if (!category) {
+        // Show main menu
+        await message.channel.send(`\`\`\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-**Reaction**
-- react <user_id> <emoji>
-- stop <user_id>
-- clear
+╦  ╔═╗╦  ╦╔═╗═╗ ╦╔═╗ ╦╦═╗╔═╗╔╦╗
+║  ║ ║╚╗╔╝║╣ ╔╩╦╝╠═╝ ║╠╦╝║╣  ║║
+╩═╝╚═╝ ╚╝ ╚═╝╩ ╚═╩   ╩╩╚═╚═╝═╩╝
 
-**Messaging**
-- spam <msg> <count>
-- chatpack <user> 
-- massdm <msg> or <filename>
-- say <msg>
-- dm <user_id> <msg>
-- loop <msg> <count> <delay>
-- type <msg>
-- emoji <emoji>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      COMMAND MENU
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-**Control**
-- edit <msg_id> <new>
-- end (will end chatpack)
-- delete <msg_id>
-- purge <amount>
-- copy <msg_id>
-- vanish
+[1] Reactions
+[2] Messages  
+[3] Controls
+[4] Logs
+[5] Utilities
 
-**Logs & Auto**
-- removereply <trigger>
-- showlogs [channel_id]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-**Utilities**
-- autoping <user_id> <interval>
-- stopautoping
-- status <text> <mode_streaming>
-- ping
-- userinfo [user]
-- serverinfo
-- cloak <new_name>
-- hack <user>
+Type ,cmds [number] to view
+Example: ,cmds 1
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`\`\``);
+      } else if (category === '1') {
+        await message.channel.send(`\`\`\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      [1] REACTION COMMANDS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+,react <user_id> <emoji>
+Example: ,react 123456789 👍
+
+,stop <user_id>
+Example: ,stop 123456789
+
+,clear
+Example: ,clear
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Type ,cmds to return to menu
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`\`\``);
+      } else if (category === '2') {
+        await message.channel.send(`\`\`\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      [2] MESSAGING COMMANDS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+,say <msg>
+Example: ,say Secret message
+
+,dm <user_id> <msg>
+Example: ,dm 123456789 Hey
+
+,loop <msg> <count> <delay>
+Example: ,loop hello 5 2
+
+,type <msg>
+Example: ,type I'm typing...
+
+,emoji <emoji>
+Example: ,emoji 🔥
+
+,embed <title> | <desc>
+Example: ,embed Title | Desc
+
+,chatpack <user_id>
+Example: ,chatpack 123456789
+
+,massdm <msg>
+Example: ,massdm Hello
+
+,spam <msg> <count>
+Example: ,spam Hello 5
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Type ,cmds to return to menu
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`\`\``);
+      } else if (category === '3') {
+        await message.channel.send(`\`\`\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       [3] CONTROL COMMANDS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+,edit <msg_id> <new>
+Example: ,edit 98765 New text
+
+,end [user_id]
+Example: ,end 123456789
+
+,delete <msg_id>
+Example: ,delete 98765
+
+,purge <amount>
+Example: ,purge 10
+
+,copy <msg_id>
+Example: ,copy 98765
+
+,vanish
+Example: ,vanish
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Type ,cmds to return to menu
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`\`\``);
+      } else if (category === '4') {
+        await message.channel.send(`\`\`\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    [4] LOGS & AUTO COMMANDS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+,showlogs [channel_id]
+Example: ,showlogs
+
+,autoping <user_id> <interval>
+Example: ,autoping 123456789 5
+
+,stopautoping
+Example: ,stopautoping
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Type ,cmds to return to menu
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`\`\``);
+      } else if (category === '5') {
+        await message.channel.send(`\`\`\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      [5] UTILITY COMMANDS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+,status <text> [mode]
+Example: ,status Chilling
+
+,ping
+Example: ,ping
+
+,userinfo [user]
+Example: ,userinfo @user
+
+,serverinfo
+Example: ,serverinfo
+
+,cloak <new_name>
+Example: ,cloak NewName
+
+,hack <user>
+Example: ,hack @user
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Type ,cmds to return to menu
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`\`\``);
+      } else {
+        await message.channel.send('Invalid category. Use `,cmds` to see available categories.');
+      }
     }
 
     else if (command === 'react') {
