@@ -84,7 +84,6 @@ node bot.js
 - `,purge <amount>` - Delete your recent messages
 - `,copy <msg_id>` - Copy a message's content
 - `,vanish` - Send a self-deleting message
-- `,embed <title> | <desc>` - Create an embed
 
 ### Logs & Auto
 - `,showlogs [channel_id]` - Show command logs
