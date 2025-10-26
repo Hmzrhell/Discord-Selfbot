@@ -1,0 +1,25 @@
+{
+  "name": "discord-selfbot",
+  "version": "1.0.0",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "discord",
+    "selfbot",
+    "automation",
+    "discord.js"
+  ],
+  "author": "Hmzrhell",
+  "license": "MIT",
+  "description": "A Discord selfbot with automated reactions, auto-ping, and chatpack features",
+  "dependencies": {
+    "debug": "^4.4.3",
+    "discord.js-selfbot-v13": "^3.7.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
