@@ -5,6 +5,9 @@ const reactionTargets = new Map();
 const autoPingIntervals = new Map();
 const chatpackActive = new Map();
 const logs = [];
+const snipes = new Map();
+const editSnipes = new Map();
+const reminders = [];
 let afkStatus = {
   enabled: false,
   message: 'I am currently AFK',
@@ -39,6 +42,26 @@ client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
   console.log(`Prefix: ${PREFIX}`);
   console.log('Bot is ready!');
+});
+
+client.on('messageDelete', (message) => {
+  if (message.author?.bot) return;
+  snipes.set(message.channel.id, {
+    content: message.content,
+    author: message.author,
+    timestamp: Date.now()
+  });
+});
+
+client.on('messageUpdate', (oldMessage, newMessage) => {
+  if (oldMessage.author?.bot) return;
+  if (oldMessage.content === newMessage.content) return;
+  editSnipes.set(newMessage.channel.id, {
+    oldContent: oldMessage.content,
+    newContent: newMessage.content,
+    author: oldMessage.author,
+    timestamp: Date.now()
+  });
 });
 
 client.on('messageCreate', async (message) => {
@@ -143,8 +166,11 @@ client.on('messageCreate', async (message) => {
 [1] Reactions
 [2] Messages  
 [3] Controls
-[4] Logs
+[4] Logs & Sniping
 [5] Utilities
+[6] Server Tools
+[7] Fun & Trolling
+[8] Information
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -240,7 +266,7 @@ Type ++cmds to return to menu
       } else if (category === '4') {
         await message.channel.send(`\`\`\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    [4] LOGS & AUTO COMMANDS
+   [4] LOGS & SNIPING COMMANDS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ++showlogs [channel_id]
@@ -251,6 +277,14 @@ Example: ++autoping 123456789 5
 
 ++stopautoping
 Example: ++stopautoping
+
+++snipe
+Example: ++snipe
+View last deleted message
+
+++editsnipe
+Example: ++editsnipe
+View last edited message
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Type ++cmds to return to menu
@@ -283,6 +317,85 @@ Example: ++hack @user
 ++afk [message]
 Example: ++afk example
 Auto-reply when mentioned/pinged
+
+++avatar [user_id]
+Example: ++avatar 123456789
+Get user's avatar in high quality
+
+++calc <expression>
+Example: ++calc 5 + 10 * 2
+
+++base64 <encode/decode> <text>
+Example: ++base64 encode hello
+
+++reminder <seconds> <message>
+Example: ++reminder 60 Check this
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Type ++cmds to return to menu
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`\`\``);
+      } else if (category === '6') {
+        await message.channel.send(`\`\`\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     [6] SERVER TOOL COMMANDS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+++steal <emoji>
+Example: ++steal :emoji:
+Steal/copy custom emoji
+
+++nickname <name>
+Example: ++nickname CoolName
+Change your server nickname
+
+++firstmsg
+Example: ++firstmsg
+Jump to first message in channel
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Type ++cmds to return to menu
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`\`\``);
+      } else if (category === '7') {
+        await message.channel.send(`\`\`\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    [7] FUN & TROLLING COMMANDS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+++nitro
+Example: ++nitro
+Send fake nitro gift
+
+++fake <type>
+Example: ++fake typing
+Fake typing status
+
+++ascii <text>
+Example: ++ascii Hello
+Convert text to ASCII art
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Type ++cmds to return to menu
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`\`\``);
+      } else if (category === '8') {
+        await message.channel.send(`\`\`\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    [8] INFORMATION COMMANDS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+++roleinfo <role>
+Example: ++roleinfo Moderator
+Get detailed role information
+
+++channelinfo
+Example: ++channelinfo
+Get current channel information
+
+++inviteinfo <code>
+Example: ++inviteinfo abc123
+Get invite link information
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Type ++cmds to return to menu
@@ -720,6 +833,258 @@ Type ++cmds to return to menu
         afkStatus.enabledAt = Date.now();
         const reply = await message.channel.send(`AFK status enabled: ${afkMessage}`);
         setTimeout(() => reply.delete().catch(() => {}), 3000);
+      }
+    }
+
+    else if (command === 'avatar') {
+      const userId = args[0];
+      
+      try {
+        let user;
+        if (userId) {
+          user = await client.users.fetch(userId);
+        } else {
+          user = message.mentions.users.first() || message.author;
+        }
+        
+        const avatarURL = user.displayAvatarURL({ dynamic: true, size: 4096 });
+        await message.channel.send(avatarURL);
+      } catch (e) {
+        console.log('Avatar command error:', e.message);
+        await message.channel.send(`Failed to fetch avatar: ${e.message}`);
+      }
+    }
+
+    else if (command === 'snipe') {
+      const snipe = snipes.get(message.channel.id);
+      if (!snipe) {
+        return message.channel.send('Nothing to snipe!');
+      }
+      const embed = new MessageEmbed()
+        .setAuthor({ name: snipe.author.tag, iconURL: snipe.author.displayAvatarURL() })
+        .setDescription(snipe.content || '*[no content]*')
+        .setFooter({ text: `Deleted ${Math.floor((Date.now() - snipe.timestamp) / 1000)}s ago` })
+        .setColor('#5865F2');
+      await message.channel.send({ content: ' ', embeds: [embed] });
+    }
+
+    else if (command === 'editsnipe') {
+      const editSnipe = editSnipes.get(message.channel.id);
+      if (!editSnipe) {
+        return message.channel.send('Nothing to edit snipe!');
+      }
+      const embed = new MessageEmbed()
+        .setAuthor({ name: editSnipe.author.tag, iconURL: editSnipe.author.displayAvatarURL() })
+        .addFields(
+          { name: 'Before', value: editSnipe.oldContent || '*[no content]*' },
+          { name: 'After', value: editSnipe.newContent || '*[no content]*' }
+        )
+        .setFooter({ text: `Edited ${Math.floor((Date.now() - editSnipe.timestamp) / 1000)}s ago` })
+        .setColor('#5865F2');
+      await message.channel.send({ content: ' ', embeds: [embed] });
+    }
+
+    else if (command === 'steal') {
+      const emoji = args[0];
+      if (!emoji) return message.channel.send('Usage: ++steal <emoji>');
+      
+      try {
+        const emojiMatch = emoji.match(/<a?:(\w+):(\d+)>/);
+        if (!emojiMatch) return message.channel.send('Invalid emoji format!');
+        
+        const emojiName = emojiMatch[1];
+        const emojiId = emojiMatch[2];
+        const isAnimated = emoji.startsWith('<a:');
+        const emojiURL = `https://cdn.discordapp.com/emojis/${emojiId}.${isAnimated ? 'gif' : 'png'}`;
+        
+        await message.channel.send(`Emoji: ${emojiName}\n${emojiURL}`);
+      } catch (e) {
+        await message.channel.send('Failed to steal emoji.');
+      }
+    }
+
+    else if (command === 'nickname') {
+      const newNick = args.join(' ');
+      if (!newNick) return message.channel.send('Usage: ++nickname <name>');
+      
+      if (!message.guild) {
+        return message.channel.send('This command only works in servers.');
+      }
+      
+      try {
+        const member = await message.guild.members.fetch(client.user.id);
+        await member.setNickname(newNick);
+        await message.channel.send(`Nickname changed to: ${newNick}`);
+      } catch (e) {
+        await message.channel.send('Failed to change nickname.');
+      }
+    }
+
+    else if (command === 'firstmsg') {
+      try {
+        const messages = await message.channel.messages.fetch({ after: '1', limit: 1 });
+        const firstMsg = messages.first();
+        if (firstMsg) {
+          await message.channel.send(`First message: ${firstMsg.url}`);
+        } else {
+          await message.channel.send('Could not find first message.');
+        }
+      } catch (e) {
+        await message.channel.send('Failed to fetch first message.');
+      }
+    }
+
+    else if (command === 'calc') {
+      const expression = args.join(' ');
+      if (!expression) return message.channel.send('Usage: ++calc <expression>');
+      
+      try {
+        const result = eval(expression.replace(/[^0-9+\-*/().\s]/g, ''));
+        await message.channel.send(`Result: ${result}`);
+      } catch (e) {
+        await message.channel.send('Invalid expression.');
+      }
+    }
+
+    else if (command === 'base64') {
+      const action = args[0];
+      const text = args.slice(1).join(' ');
+      
+      if (!action || !text) {
+        return message.channel.send('Usage: ++base64 <encode/decode> <text>');
+      }
+      
+      try {
+        if (action === 'encode') {
+          const encoded = Buffer.from(text).toString('base64');
+          await message.channel.send(`Encoded: ${encoded}`);
+        } else if (action === 'decode') {
+          const decoded = Buffer.from(text, 'base64').toString('utf-8');
+          await message.channel.send(`Decoded: ${decoded}`);
+        } else {
+          await message.channel.send('Use "encode" or "decode"');
+        }
+      } catch (e) {
+        await message.channel.send('Failed to process base64.');
+      }
+    }
+
+    else if (command === 'reminder') {
+      const time = parseInt(args[0]);
+      const reminderMsg = args.slice(1).join(' ');
+      
+      if (!time || !reminderMsg) {
+        return message.channel.send('Usage: ++reminder <seconds> <message>');
+      }
+      
+      await message.channel.send(`Reminder set for ${time} seconds.`);
+      setTimeout(async () => {
+        try {
+          await message.channel.send(`⏰ Reminder: ${reminderMsg}`);
+        } catch (e) {}
+      }, time * 1000);
+    }
+
+    else if (command === 'nitro') {
+      const fakeLink = 'https://discord.gift/fakenitro123456789';
+      await message.channel.send(`🎉 You've received a gift! ${fakeLink}`);
+    }
+
+    else if (command === 'fake') {
+      const type = args[0];
+      if (!type) return message.channel.send('Usage: ++fake <typing/recording/streaming>');
+      
+      try {
+        if (type === 'typing') {
+          await message.channel.sendTyping();
+          await message.channel.send('Started fake typing...');
+        } else {
+          await message.channel.send('Type "typing" for fake typing status.');
+        }
+      } catch (e) {
+        await message.channel.send('Failed to fake status.');
+      }
+    }
+
+    else if (command === 'ascii') {
+      const text = args.join(' ');
+      if (!text) return message.channel.send('Usage: ++ascii <text>');
+      
+      const ascii = text.split('').map(c => {
+        const code = c.charCodeAt(0);
+        return code >= 33 && code <= 126 ? c : ' ';
+      }).join(' ');
+      
+      await message.channel.send(`\`${ascii}\``);
+    }
+
+    else if (command === 'roleinfo') {
+      const roleName = args.join(' ');
+      if (!roleName) return message.channel.send('Usage: ++roleinfo <role>');
+      
+      if (!message.guild) {
+        return message.channel.send('This command only works in servers.');
+      }
+      
+      const role = message.guild.roles.cache.find(r => 
+        r.name.toLowerCase() === roleName.toLowerCase() || r.id === roleName
+      );
+      
+      if (!role) return message.channel.send('Role not found.');
+      
+      const embed = new MessageEmbed()
+        .setTitle(`Role Info: ${role.name}`)
+        .addFields(
+          { name: 'ID', value: role.id, inline: true },
+          { name: 'Color', value: role.hexColor, inline: true },
+          { name: 'Members', value: role.members.size.toString(), inline: true },
+          { name: 'Position', value: role.position.toString(), inline: true },
+          { name: 'Mentionable', value: role.mentionable ? 'Yes' : 'No', inline: true },
+          { name: 'Hoisted', value: role.hoist ? 'Yes' : 'No', inline: true }
+        )
+        .setColor(role.hexColor);
+      await message.channel.send({ content: ' ', embeds: [embed] });
+    }
+
+    else if (command === 'channelinfo') {
+      const channel = message.channel;
+      const embed = new MessageEmbed()
+        .setTitle(`Channel Info: ${channel.name || 'DM'}`)
+        .addFields(
+          { name: 'ID', value: channel.id, inline: true },
+          { name: 'Type', value: channel.type, inline: true }
+        )
+        .setColor('#5865F2');
+      
+      if (channel.topic) {
+        embed.addFields({ name: 'Topic', value: channel.topic });
+      }
+      
+      await message.channel.send({ content: ' ', embeds: [embed] });
+    }
+
+    else if (command === 'inviteinfo') {
+      const code = args[0];
+      if (!code) return message.channel.send('Usage: ++inviteinfo <code>');
+      
+      try {
+        const invite = await client.fetchInvite(code);
+        const embed = new MessageEmbed()
+          .setTitle('Invite Info')
+          .addFields(
+            { name: 'Server', value: invite.guild?.name || 'Unknown', inline: true },
+            { name: 'Channel', value: invite.channel?.name || 'Unknown', inline: true },
+            { name: 'Members', value: invite.memberCount?.toString() || 'Unknown', inline: true }
+          )
+          .setColor('#5865F2');
+        
+        if (invite.guild?.icon) {
+          embed.setThumbnail(invite.guild.iconURL());
+        }
+        
+        await message.channel.send({ content: ' ', embeds: [embed] });
+      } catch (e) {
+        await message.channel.send('Invalid invite code or unable to fetch.');
       }
     }
 
