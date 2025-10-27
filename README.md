@@ -1,6 +1,6 @@
 # Discord Selfbot
 
-A Discord selfbot built with Node.js that provides automated interaction features. This bot responds to commands with a comma (`,`) prefix and includes functionality for automatic reactions, auto-pinging users, and chatpack (auto-response) features.
+A Discord selfbot built with Node.js that provides automated interaction features. This bot responds to commands with a comma (`++`) prefix and includes functionality for automatic reactions, auto-pinging users, and chatpack (auto-response) features.
 
 ## ⚠️ Important Warning
 
