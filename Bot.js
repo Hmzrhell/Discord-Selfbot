@@ -677,7 +677,7 @@ Type ++cmds to return to menu
       await message.channel.send(`Successfully hacked ${user}! 😎`);
     }
 
-    else if (command === 'afk') {
+    else if (command === 'a') {
       const afkMessage = args.join(' ');
       
       try {
