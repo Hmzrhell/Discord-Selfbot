@@ -219,9 +219,6 @@ Example: ++type I'm typing...
 ++emoji <emoji>
 Example: ++emoji 🔥
 
-++embed <title> | <desc>
-Example: ++embed Title | Desc
-
 ++chatpack <user_id>
 Example: ++chatpack 123456789
 
@@ -411,7 +408,7 @@ Type ++cmds to return to menu
       const userIds = args.slice(0, 25);
       
       if (userIds.length === 0 || !emoji) {
-        return message.channel.send('Usage: ,react <user_id> [user_id2] ... <emoji> (max 25 users)');
+        return message.channel.send('Usage: ++react <user_id> [user_id2] ... <emoji> (max 25 users)');
       }
 
       try {
@@ -431,7 +428,7 @@ Type ++cmds to return to menu
 
     else if (command === 'stop') {
       const userId = args[0];
-      if (!userId) return message.channel.send('Usage: ,stop <user_id>');
+      if (!userId) return message.channel.send('Usage: ++stop <user_id>');
 
       if (reactionTargets.has(userId)) {
         reactionTargets.delete(userId);
@@ -449,7 +446,7 @@ Type ++cmds to return to menu
     else if (command === 'spam') {
       const count = parseInt(args.pop());
       const msg = args.join(' ');
-      if (!msg || isNaN(count)) return message.channel.send('Usage: ,spam <msg> <count>');
+      if (!msg || isNaN(count)) return message.channel.send('Usage: ++spam <msg> <count>');
 
       for (let i = 0; i < Math.min(count, 50); i++) {
         await message.channel.send(msg);
@@ -458,10 +455,10 @@ Type ++cmds to return to menu
 
     else if (command === 'chatpack') {
       const userId = args[0];
-      if (!userId) return message.channel.send('Usage: ,chatpack <user_id>');
+      if (!userId) return message.channel.send('Usage: ++chatpack <user_id>');
 
       chatpackActive.set(userId, true);
-      await message.channel.send(`Chatpack activated for <@${userId}>. Will auto-reply to their messages. Use ,end to stop.`);
+      await message.channel.send(`Chatpack activated for <@${userId}>. Will auto-reply to their messages. Use ++end to stop.`);
     }
 
     else if (command === 'end') {
@@ -479,7 +476,7 @@ Type ++cmds to return to menu
 
     else if (command === 'massdm') {
       const msg = args.join(' ');
-      if (!msg) return message.channel.send('Usage: ,massdm <msg>');
+      if (!msg) return message.channel.send('Usage: ++massdm <msg>');
 
       if (!message.guild) {
         return message.channel.send('This command only works in servers');
@@ -499,7 +496,7 @@ Type ++cmds to return to menu
 
     else if (command === 'say') {
       const msg = args.join(' ');
-      if (!msg) return message.channel.send('Usage: ,say <msg>');
+      if (!msg) return message.channel.send('Usage: ++say <msg>');
 
       try {
         await message.delete();
@@ -509,22 +506,11 @@ Type ++cmds to return to menu
       await message.channel.send(msg);
     }
 
-    else if (command === 'embed') {
-      const text = args.join(' ');
-      const parts = text.split('|');
-      if (parts.length < 2) return message.channel.send('Usage: ,embed <title> | <desc>');
-
-      const embed = new MessageEmbed()
-        .setTitle(parts[0].trim())
-        .setDescription(parts[1].trim())
-        .setColor('#5865F2');
-      await message.channel.send({ content: ' ', embeds: [embed] });
-    }
 
     else if (command === 'dm') {
       const userId = args[0];
       const msg = args.slice(1).join(' ');
-      if (!userId || !msg) return message.channel.send('Usage: ,dm <user_id> <msg>');
+      if (!userId || !msg) return message.channel.send('Usage: ++dm <user_id> <msg>');
 
       try {
         const user = await client.users.fetch(userId);
@@ -540,7 +526,11 @@ Type ++cmds to return to menu
       const count = parseInt(args.pop());
       const msg = args.join(' ');
       if (!msg || isNaN(count) || isNaN(delay)) {
-        return message.channel.send('Usage: ,loop <msg> <count> <delay>');
+        return message.channel.send('Usage: ++loop <msg> <count> <delay>');
+      }
+
+      if (delay < 1) {
+        return message.channel.send('Delay must be at least 1 second to prevent spam.');
       }
 
       for (let i = 0; i < Math.min(count, 50); i++) {
@@ -551,7 +541,7 @@ Type ++cmds to return to menu
 
     else if (command === 'type') {
       const msg = args.join(' ');
-      if (!msg) return message.channel.send('Usage: ,type <msg>');
+      if (!msg) return message.channel.send('Usage: ++type <msg>');
 
       await message.channel.sendTyping();
       await new Promise(resolve => setTimeout(resolve, 3000));
@@ -560,7 +550,7 @@ Type ++cmds to return to menu
 
     else if (command === 'emoji') {
       const emoji = args[0];
-      if (!emoji) return message.channel.send('Usage: ,emoji <emoji>');
+      if (!emoji) return message.channel.send('Usage: ++emoji <emoji>');
 
       await message.channel.send(emoji);
     }
@@ -568,7 +558,7 @@ Type ++cmds to return to menu
     else if (command === 'edit') {
       const msgId = args[0];
       const newContent = args.slice(1).join(' ');
-      if (!msgId || !newContent) return message.channel.send('Usage: ,edit <msg_id> <new>');
+      if (!msgId || !newContent) return message.channel.send('Usage: ++edit <msg_id> <new>');
 
       try {
         const msg = await message.channel.messages.fetch(msgId);
@@ -584,7 +574,7 @@ Type ++cmds to return to menu
 
     else if (command === 'delete') {
       const msgId = args[0];
-      if (!msgId) return message.channel.send('Usage: ,delete <msg_id>');
+      if (!msgId) return message.channel.send('Usage: ++delete <msg_id>');
 
       try {
         const msg = await message.channel.messages.fetch(msgId);
@@ -598,7 +588,7 @@ Type ++cmds to return to menu
     else if (command === 'purge') {
       const amount = parseInt(args[0]);
       if (isNaN(amount) || amount < 1 || amount > 100) {
-        return message.channel.send('Usage: ,purge <amount> (1-100)');
+        return message.channel.send('Usage: ++purge <amount> (1-100)');
       }
 
       try {
@@ -623,7 +613,7 @@ Type ++cmds to return to menu
 
     else if (command === 'copy') {
       const msgId = args[0];
-      if (!msgId) return message.channel.send('Usage: ,copy <msg_id>');
+      if (!msgId) return message.channel.send('Usage: ++copy <msg_id>');
 
       try {
         const msg = await message.channel.messages.fetch(msgId);
@@ -646,11 +636,6 @@ Type ++cmds to return to menu
       setTimeout(() => reply.delete().catch(() => {}), 5000);
     }
 
-    else if (command === 'removereply') {
-      const trigger = args.join(' ');
-      if (!trigger) return message.channel.send('Usage: ,removereply <trigger>');
-      await message.channel.send(`Auto-reply for "${trigger}" removed (not implemented yet)`);
-    }
 
     else if (command === 'showlogs') {
       const channelId = args[0] || message.channel.id;
@@ -671,7 +656,7 @@ Type ++cmds to return to menu
       const userId = args[0];
       const interval = parseInt(args[1]);
       if (!userId || isNaN(interval)) {
-        return message.channel.send('Usage: ,autoping <user_id> <interval>');
+        return message.channel.send('Usage: ++autoping <user_id> <interval>');
       }
 
       const existingInterval = autoPingIntervals.get(message.author.id);
@@ -709,7 +694,7 @@ Type ++cmds to return to menu
         statusText = args.slice(0, -1).join(' ');
       }
       
-      if (!statusText) return message.channel.send('Usage: ,status <text> [mode: streaming/playing/watching/listening/competing]');
+      if (!statusText) return message.channel.send('Usage: ++status <text> [mode: streaming/playing/watching/listening/competing]');
 
       const options = { type: mode };
       if (mode === 'STREAMING') {
@@ -763,7 +748,7 @@ Type ++cmds to return to menu
 
     else if (command === 'cloak') {
       const newName = args.join(' ');
-      if (!newName) return message.channel.send('Usage: ,cloak <new_name>');
+      if (!newName) return message.channel.send('Usage: ++cloak <new_name>');
 
       try {
         await client.user.setUsername(newName);
@@ -775,7 +760,7 @@ Type ++cmds to return to menu
 
     else if (command === 'hack') {
       const user = args[0];
-      if (!user) return message.channel.send('Usage: ,hack <user>');
+      if (!user) return message.channel.send('Usage: ++hack <user>');
 
       await message.channel.send(`Hacking ${user}...`);
       await new Promise(resolve => setTimeout(resolve, 1000));
