@@ -1,6 +1,6 @@
 # Discord Selfbot
 
-A Discord selfbot built with Node.js that provides automated interaction features. This bot responds to commands with a comma (`++`) prefix and includes functionality for automatic reactions, auto-pinging users, and chatpack (auto-response) features.
+A Discord selfbot built with Node.js that provides automated interaction features. This bot responds to commands with a `++` prefix and includes functionality for automatic reactions, auto-pinging users, and chatpack (auto-response) features.
 
 ## ⚠️ Important Warning
 
@@ -13,7 +13,6 @@ This is a **selfbot** - it runs on a user account rather than a bot account. Usi
 - 📢 Auto-ping functionality with configurable intervals
 - 💬 Chatpack auto-response system
 - 📝 Message logging and management
-- 🎨 Custom embeds and message formatting
 - 🔧 User and server information commands
 
 ## Installation
@@ -63,47 +62,47 @@ node bot.js
 ## Commands
 
 ### Reaction
-- `,react <user_id> <emoji>` - Auto-react to a user's messages
-- `,stop <user_id>` - Stop reacting to a user
-- `,clear` - Clear all reaction targets
+- `++react <user_id> <emoji>` - Auto-react to a user's messages
+- `++stop <user_id>` - Stop reacting to a user
+- `++clear` - Clear all reaction targets
 
 ### Messaging
-- `,spam <msg> <count>` - Send a message multiple times
-- `,chatpack <user_id>` - Auto-reply to a user's messages
-- `,massdm <msg>` - Send DM to all server members
-- `,say <msg>` - Send a message and delete your command
-- `,dm <user_id> <msg>` - Send a DM to a user
-- `,loop <msg> <count> <delay>` - Send messages in a loop
-- `,type <msg>` - Show typing indicator then send
-- `,emoji <emoji>` - Send an emoji
+- `++spam <msg> <count>` - Send a message multiple times
+- `++chatpack <user_id>` - Auto-reply to a user's messages
+- `++massdm <msg>` - Send DM to all server members
+- `++say <msg>` - Send a message and delete your command
+- `++dm <user_id> <msg>` - Send a DM to a user
+- `++loop <msg> <count> <delay>` - Send messages in a loop (minimum 1 second delay)
+- `++type <msg>` - Show typing indicator then send
+- `++emoji <emoji>` - Send an emoji
 
 ### Control
-- `,edit <msg_id> <new>` - Edit your message
-- `,end [user_id]` - End chatpack for user or all
-- `,delete <msg_id>` - Delete a message
-- `,purge <amount>` - Delete your recent messages
-- `,copy <msg_id>` - Copy a message's content
-- `,vanish` - Send a self-deleting message
+- `++edit <msg_id> <new>` - Edit your message
+- `++end [user_id]` - End chatpack for user or all
+- `++delete <msg_id>` - Delete a message
+- `++purge <amount>` - Delete your recent messages
+- `++copy <msg_id>` - Copy a message's content
+- `++vanish` - Send a self-deleting message
 
 ### Logs & Auto
-- `,showlogs [channel_id]` - Show command logs
-- `,autoping <user_id> <interval>` - Auto-ping a user
-- `,stopautoping` - Stop auto-pinging
+- `++showlogs [channel_id]` - Show command logs
+- `++autoping <user_id> <interval>` - Auto-ping a user
+- `++stopautoping` - Stop auto-pinging
 
 ### Utilities
-- `,cmds` - Show all commands
-- `,status <text> [mode]` - Set your status
-- `,ping` - Check bot latency
-- `,userinfo [user]` - Get user information
-- `,serverinfo` - Get server information
-- `,cloak <new_name>` - Change username
-- `,hack <user>` - Fun hack animation
+- `++cmds` - Show all commands
+- `++status <text> [mode]` - Set your status
+- `++ping` - Check bot latency
+- `++userinfo [user]` - Get user information
+- `++serverinfo` - Get server information
+- `++cloak <new_name>` - Change username
+- `++hack <user>` - Fun hack animation
 
 ## Configuration
 
-You can customize the bot by editing `bot.js`:
+You can customize the bot by editing `Bot.js`:
 
-- `PREFIX` - Change the command prefix (default: `,`)
+- `PREFIX` - Change the command prefix (default: `++`)
 - Command permissions are restricted to the user ID in `DISCORD_USER_ID`
 
 ## Security Notes
