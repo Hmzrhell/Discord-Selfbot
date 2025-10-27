@@ -1,10 +1,17 @@
 const { Client, MessageEmbed } = require('discord.js-selfbot-v13');
 
-const PREFIX = ',';
+const PREFIX = '++';
 const reactionTargets = new Map();
 const autoPingIntervals = new Map();
 const chatpackActive = new Map();
 const logs = [];
+let afkStatus = {
+  enabled: false,
+  message: 'I am currently AFK',
+  enabledAt: null,
+  previousStatus: null,
+  lastReplyTime: 0
+};
 
 const client = new Client({
   checkUpdate: false
@@ -36,6 +43,49 @@ client.on('ready', () => {
 
 client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
+  
+  // Check if someone mentioned or replied to the authorized user while AFK
+  if (afkStatus.enabled && message.author.id !== authorizedUserId) {
+    const mentionsUser = message.mentions.has(authorizedUserId);
+    const repliesUser = message.reference?.messageId && message.channel.messages.cache.get(message.reference.messageId)?.author.id === authorizedUserId;
+    
+    if (mentionsUser || repliesUser) {
+      try {
+        afkStatus.lastReplyTime = Date.now();
+        await message.reply(`User is AFK: ${afkStatus.message}`);
+      } catch (e) {
+        console.log('Failed to send AFK reply:', e.message);
+      }
+    }
+  }
+  
+  // If authorized user sends a message and they're AFK, disable AFK
+  // But only if AFK was enabled more than 5 seconds ago (to prevent immediate disable)
+  // And only if it's not the bot's own AFK reply (check if last reply was within 2 seconds)
+  if (afkStatus.enabled && message.author.id === authorizedUserId && !message.content.startsWith(PREFIX)) {
+    const timeSinceAfk = Date.now() - (afkStatus.enabledAt || 0);
+    const timeSinceReply = Date.now() - afkStatus.lastReplyTime;
+    
+    // Only disable if AFK was set more than 5 seconds ago AND it's not right after bot's AFK reply
+    if (timeSinceAfk > 5000 && timeSinceReply > 2000) {
+      afkStatus.enabled = false;
+      
+      // Restore previous status
+      if (afkStatus.previousStatus) {
+        try {
+          await client.user.setActivity(afkStatus.previousStatus.text, afkStatus.previousStatus.options);
+        } catch (e) {
+          console.log('Failed to restore previous status:', e.message);
+        }
+      }
+      
+      try {
+        await message.channel.send('Welcome back! AFK status disabled.');
+      } catch (e) {
+        console.log('Failed to send AFK disabled message:', e.message);
+      }
+    }
+  }
   
   // Handle reactions and chatpack for any message
   if (reactionTargets.has(message.author.id)) {
@@ -98,8 +148,8 @@ client.on('messageCreate', async (message) => {
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Type ,cmds [number] to view
-Example: ,cmds 1
+Type ++cmds [number] to view
+Example: ++cmds 1
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 \`\`\``);
@@ -109,17 +159,17 @@ Example: ,cmds 1
       [1] REACTION COMMANDS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-,react <user_id> <emoji>
-Example: ,react 123456789 👍
+++react <user_id> <emoji>
+Example: ++react 123456789 👍
 
-,stop <user_id>
-Example: ,stop 123456789
+++stop <user_id>
+Example: ++stop 123456789
 
-,clear
-Example: ,clear
+++clear
+Example: ++clear
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Type ,cmds to return to menu
+Type ++cmds to return to menu
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 \`\`\``);
       } else if (category === '2') {
@@ -128,35 +178,35 @@ Type ,cmds to return to menu
       [2] MESSAGING COMMANDS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-,say <msg>
-Example: ,say Secret message
+++say <msg>
+Example: ++say Secret message
 
-,dm <user_id> <msg>
-Example: ,dm 123456789 Hey
+++dm <user_id> <msg>
+Example: ++dm 123456789 Hey
 
-,loop <msg> <count> <delay>
-Example: ,loop hello 5 2
+++loop <msg> <count> <delay>
+Example: ++loop hello 5 2
 
-,type <msg>
-Example: ,type I'm typing...
+++type <msg>
+Example: ++type I'm typing...
 
-,emoji <emoji>
-Example: ,emoji 🔥
+++emoji <emoji>
+Example: ++emoji 🔥
 
-,embed <title> | <desc>
-Example: ,embed Title | Desc
+++embed <title> | <desc>
+Example: ++embed Title | Desc
 
-,chatpack <user_id>
-Example: ,chatpack 123456789
+++chatpack <user_id>
+Example: ++chatpack 123456789
 
-,massdm <msg>
-Example: ,massdm Hello
+++massdm <msg>
+Example: ++massdm Hello
 
-,spam <msg> <count>
-Example: ,spam Hello 5
+++spam <msg> <count>
+Example: ++spam Hello 5
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Type ,cmds to return to menu
+Type ++cmds to return to menu
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 \`\`\``);
       } else if (category === '3') {
@@ -165,26 +215,26 @@ Type ,cmds to return to menu
        [3] CONTROL COMMANDS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-,edit <msg_id> <new>
-Example: ,edit 98765 New text
+++edit <msg_id> <new>
+Example: ++edit 98765 New text
 
-,end [user_id]
-Example: ,end 123456789
+++end [user_id]
+Example: ++end 123456789
 
-,delete <msg_id>
-Example: ,delete 98765
+++delete <msg_id>
+Example: ++delete 98765
 
-,purge <amount>
-Example: ,purge 10
+++purge <amount>
+Example: ++purge 10
 
-,copy <msg_id>
-Example: ,copy 98765
+++copy <msg_id>
+Example: ++copy 98765
 
-,vanish
-Example: ,vanish
+++vanish
+Example: ++vanish
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Type ,cmds to return to menu
+Type ++cmds to return to menu
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 \`\`\``);
       } else if (category === '4') {
@@ -193,17 +243,17 @@ Type ,cmds to return to menu
     [4] LOGS & AUTO COMMANDS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-,showlogs [channel_id]
-Example: ,showlogs
+++showlogs [channel_id]
+Example: ++showlogs
 
-,autoping <user_id> <interval>
-Example: ,autoping 123456789 5
+++autoping <user_id> <interval>
+Example: ++autoping 123456789 5
 
-,stopautoping
-Example: ,stopautoping
+++stopautoping
+Example: ++stopautoping
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Type ,cmds to return to menu
+Type ++cmds to return to menu
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 \`\`\``);
       } else if (category === '5') {
@@ -212,30 +262,34 @@ Type ,cmds to return to menu
       [5] UTILITY COMMANDS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-,status <text> [mode]
-Example: ,status Chilling
+++status <text> [mode]
+Example: ++status Chilling
 
-,ping
-Example: ,ping
+++ping
+Example: ++ping
 
-,userinfo [user]
-Example: ,userinfo @user
+++userinfo [user]
+Example: ++userinfo @user
 
-,serverinfo
-Example: ,serverinfo
+++serverinfo
+Example: ++serverinfo
 
-,cloak <new_name>
-Example: ,cloak NewName
+++cloak <new_name>
+Example: ++cloak NewName
 
-,hack <user>
-Example: ,hack @user
+++hack <user>
+Example: ++hack @user
+
+++afk [message]
+Example: ++afk example
+Auto-reply when mentioned/pinged
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Type ,cmds to return to menu
+Type ++cmds to return to menu
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 \`\`\``);
       } else {
-        await message.channel.send('Invalid category. Use `,cmds` to see available categories.');
+        await message.channel.send('Invalid category. Use `++cmds` to see available categories.');
       }
     }
 
@@ -621,6 +675,52 @@ Type ,cmds to return to menu
       await message.channel.send('██████████ 100%');
       await new Promise(resolve => setTimeout(resolve, 500));
       await message.channel.send(`Successfully hacked ${user}! 😎`);
+    }
+
+    else if (command === 'afk') {
+      const afkMessage = args.join(' ');
+      
+      try {
+        await message.delete();
+      } catch (e) {
+        console.log('Could not delete command message');
+      }
+      
+      // Save current status before changing it
+      const currentPresence = client.user.presence;
+      if (currentPresence && currentPresence.activities && currentPresence.activities.length > 0) {
+        const activity = currentPresence.activities[0];
+        afkStatus.previousStatus = {
+          text: activity.name,
+          options: {
+            type: activity.type,
+            url: activity.url || undefined
+          }
+        };
+      } else {
+        afkStatus.previousStatus = null;
+      }
+      
+      // Set AFK status
+      try {
+        await client.user.setActivity('AFK', { type: 'PLAYING' });
+      } catch (e) {
+        console.log('Failed to set AFK status:', e.message);
+      }
+      
+      if (!afkMessage) {
+        afkStatus.enabled = true;
+        afkStatus.message = 'I am currently AFK';
+        afkStatus.enabledAt = Date.now();
+        const reply = await message.channel.send('AFK status enabled with default message.');
+        setTimeout(() => reply.delete().catch(() => {}), 3000);
+      } else {
+        afkStatus.enabled = true;
+        afkStatus.message = afkMessage;
+        afkStatus.enabledAt = Date.now();
+        const reply = await message.channel.send(`AFK status enabled: ${afkMessage}`);
+        setTimeout(() => reply.delete().catch(() => {}), 3000);
+      }
     }
 
   } catch (error) {
