@@ -8,6 +8,15 @@ const logs = [];
 const snipes = new Map();
 const editSnipes = new Map();
 const reminders = [];
+
+const chatpackPresets = {
+  1: { message: 'i own you dumbass, sit down', type: 'ping' },
+  2: { message: 'you\'re embarrassing yourself lmao', type: 'reply' },
+  3: { message: 'keep crying, nobody cares about you', type: 'ping' },
+  4: { message: 'you talk too much for someone who gets no respect', type: 'reply' },
+  5: { message: 'stay mad, you\'re my entertainment', type: 'ping' },
+  6: { message: 'bro really thought he did something 💀', type: 'reply' }
+};
 let afkStatus = {
   enabled: false,
   message: 'I am currently AFK',
@@ -122,7 +131,12 @@ client.on('messageCreate', async (message) => {
   
   if (chatpackActive.has(message.author.id)) {
     try {
-      await message.reply('Auto-response from chatpack!');
+      const preset = chatpackActive.get(message.author.id);
+      if (preset.type === 'ping') {
+        await message.channel.send(`<@${message.author.id}> ${preset.message}`);
+      } else {
+        await message.reply(preset.message);
+      }
     } catch (e) {
       console.log('Failed to send chatpack reply:', e.message);
     }
@@ -171,6 +185,7 @@ client.on('messageCreate', async (message) => {
 [6] Server Tools
 [7] Fun & Trolling
 [8] Information
+[9] Chatpack Presets
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -218,9 +233,6 @@ Example: ++type I'm typing...
 
 ++emoji <emoji>
 Example: ++emoji 🔥
-
-++chatpack <user_id>
-Example: ++chatpack 123456789
 
 ++massdm <msg>
 Example: ++massdm Hello
@@ -398,6 +410,34 @@ Get invite link information
 Type ++cmds to return to menu
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 \`\`\``);
+      } else if (category === '9') {
+        await message.channel.send(`\`\`\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    [9] CHATPACK PRESETS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+++chatpack <preset> <user_id>
+Auto-reply to user with preset
+
+PRESETS:
+[1] "i own you dumbass, sit down" (PING)
+[2] "you're embarrassing yourself lmao" (REPLY)
+[3] "keep crying, nobody cares about you" (PING)
+[4] "you talk too much for someone who gets no respect" (REPLY)
+[5] "stay mad, you're my entertainment" (PING)
+[6] "bro really thought he did something 💀" (REPLY)
+
+Examples:
+++chatpack 1 123456789
+++chatpack 3 987654321
+
+++end [user_id]
+Stop chatpack for user or all
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Type ++cmds to return to menu
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`\`\``);
       } else {
         await message.channel.send('Invalid category. Use `++cmds` to see available categories.');
       }
@@ -454,11 +494,21 @@ Type ++cmds to return to menu
     }
 
     else if (command === 'chatpack') {
-      const userId = args[0];
-      if (!userId) return message.channel.send('Usage: ++chatpack <user_id>');
+      const presetNum = parseInt(args[0]);
+      const userId = args[1];
+      
+      if (!presetNum || !userId) {
+        return message.channel.send('Usage: ++chatpack <preset> <user_id>\nExample: ++chatpack 1 123456789\nUse ++cmds 9 to see all presets');
+      }
 
-      chatpackActive.set(userId, true);
-      await message.channel.send(`Chatpack activated for <@${userId}>. Will auto-reply to their messages. Use ++end to stop.`);
+      const preset = chatpackPresets[presetNum];
+      if (!preset) {
+        return message.channel.send(`Invalid preset number. Use ++cmds 9 to see available presets (1-6)`);
+      }
+
+      chatpackActive.set(userId, preset);
+      const typeText = preset.type === 'ping' ? 'PING' : 'REPLY';
+      await message.channel.send(`Chatpack activated for <@${userId}>\nPreset [${presetNum}] (${typeText}): "${preset.message}"\n\nUse ++end ${userId} to stop.`);
     }
 
     else if (command === 'end') {
