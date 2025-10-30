@@ -4,6 +4,8 @@ const PREFIX = '++';
 const reactionTargets = new Map();
 const autoPingIntervals = new Map();
 const chatpackActive = new Map();
+const nameTriggers = new Map();
+const serverBlacklist = new Set();
 const logs = [];
 const snipes = new Map();
 const editSnipes = new Map();
@@ -141,6 +143,26 @@ client.on('messageCreate', async (message) => {
       console.log('Failed to send chatpack reply:', e.message);
     }
   }
+  
+  // Check for name triggers (skip if server is blacklisted)
+  if (!message.content.startsWith(PREFIX) && message.author.id !== authorizedUserId) {
+    const serverId = message.guild?.id;
+    const isBlacklisted = serverId && serverBlacklist.has(serverId);
+    
+    if (!isBlacklisted) {
+      const messageLower = message.content.toLowerCase();
+      for (const [triggerName, triggerData] of nameTriggers) {
+        if (messageLower.includes(triggerName.toLowerCase())) {
+          try {
+            await message.reply(`<@${triggerData.userId}> ${triggerData.message}`);
+          } catch (e) {
+            console.log('Failed to send name trigger reply:', e.message);
+          }
+          break;
+        }
+      }
+    }
+  }
 
   // Handle commands
   if (!message.content.startsWith(PREFIX)) return;
@@ -186,6 +208,7 @@ client.on('messageCreate', async (message) => {
 [7] Fun & Trolling
 [8] Information
 [9] Chatpack Presets
+[10] Name Triggers
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -438,6 +461,48 @@ Stop chatpack for user or all
 Type ++cmds to return to menu
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 \`\`\``);
+      } else if (category === '10') {
+        await message.channel.send(`\`\`\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      [10] NAME TRIGGERS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+++trigger <name> <user_id> <message>
+Example: ++trigger sophie 123456789 Hey!
+Auto-reply when someone mentions a name
+
+When anyone says the trigger word,
+the bot will REPLY to their message
+and PING the user you specified.
+
+++removetrigger <name>
+Example: ++removetrigger sophie
+Remove a name trigger
+
+++listtriggers
+Example: ++listtriggers
+Show all active name triggers
+
+SERVER BLACKLIST:
+Prevent triggers in certain servers
+
+++blacklist [server_id] [server_id2] ...
+Example: ++blacklist 123456789 987654321
+Blacklist up to 25 servers at once
+(uses current server if no ID provided)
+
+++unblacklist <server_id>
+Example: ++unblacklist 123456789
+Remove server from blacklist
+
+++listblacklist
+Example: ++listblacklist
+Show all blacklisted servers
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Type ++cmds to return to menu
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`\`\``);
       } else {
         await message.channel.send('Invalid category. Use `++cmds` to see available categories.');
       }
@@ -522,6 +587,117 @@ Type ++cmds to return to menu
       } else {
         await message.channel.send(`No active chatpack for ${userId}`);
       }
+    }
+
+    else if (command === 'trigger') {
+      const triggerName = args[0];
+      const userId = args[1];
+      const triggerMessage = args.slice(2).join(' ');
+      
+      if (!triggerName || !userId || !triggerMessage) {
+        return message.channel.send('Usage: ++trigger <name> <user_id> <message>\nExample: ++trigger sophie 123456789 Hello there!');
+      }
+      
+      nameTriggers.set(triggerName, { userId, message: triggerMessage });
+      await message.channel.send(`✅ Name trigger set!\nWhen anyone mentions "${triggerName}", I will reply and ping <@${userId}> with:\n"${triggerMessage}"\n\nUse ++removetrigger ${triggerName} to remove it.`);
+    }
+
+    else if (command === 'removetrigger') {
+      const triggerName = args[0];
+      
+      if (!triggerName) {
+        return message.channel.send('Usage: ++removetrigger <name>\nExample: ++removetrigger sophie');
+      }
+      
+      if (nameTriggers.has(triggerName)) {
+        nameTriggers.delete(triggerName);
+        await message.channel.send(`✅ Trigger "${triggerName}" removed!`);
+      } else {
+        await message.channel.send(`❌ No trigger found for "${triggerName}"`);
+      }
+    }
+
+    else if (command === 'listtriggers') {
+      if (nameTriggers.size === 0) {
+        return message.channel.send('No active name triggers. Use ++trigger to add one!');
+      }
+      
+      let list = '**Active Name Triggers:**\n\n';
+      for (const [name, data] of nameTriggers) {
+        list += `• **${name}** → Pings <@${data.userId}>\n  Message: "${data.message}"\n\n`;
+      }
+      
+      await message.channel.send(list);
+    }
+
+    else if (command === 'blacklist') {
+      let serverIds = args.length > 0 ? args.slice(0, 25) : [message.guild?.id];
+      
+      if (!serverIds[0]) {
+        return message.channel.send('Usage: ++blacklist [server_id] [server_id2] ...\nIf no server ID provided, blacklists current server.\nExample: ++blacklist 123456789 987654321\n(Max 25 servers at once)');
+      }
+      
+      let added = [];
+      let alreadyBlacklisted = [];
+      
+      for (const serverId of serverIds) {
+        if (serverBlacklist.has(serverId)) {
+          alreadyBlacklisted.push(serverId);
+        } else {
+          serverBlacklist.add(serverId);
+          added.push(serverId);
+        }
+      }
+      
+      let response = '';
+      if (added.length > 0) {
+        response += `✅ **${added.length} server(s) blacklisted!**\n`;
+        response += added.map(id => {
+          const guild = client.guilds.cache.get(id);
+          return guild ? `• ${guild.name} (${id})` : `• ${id}`;
+        }).join('\n');
+        response += '\n\nName triggers will not work in these servers.';
+      }
+      
+      if (alreadyBlacklisted.length > 0) {
+        response += `\n\n⚠️ Already blacklisted: ${alreadyBlacklisted.length} server(s)`;
+      }
+      
+      await message.channel.send(response);
+    }
+
+    else if (command === 'unblacklist') {
+      const serverId = args[0];
+      
+      if (!serverId) {
+        return message.channel.send('Usage: ++unblacklist <server_id>\nExample: ++unblacklist 123456789');
+      }
+      
+      if (serverBlacklist.has(serverId)) {
+        serverBlacklist.delete(serverId);
+        await message.channel.send(`✅ Server ${serverId} removed from blacklist!`);
+      } else {
+        await message.channel.send(`❌ Server ${serverId} is not blacklisted.`);
+      }
+    }
+
+    else if (command === 'listblacklist') {
+      if (serverBlacklist.size === 0) {
+        return message.channel.send('No servers blacklisted. Use ++blacklist to add one!');
+      }
+      
+      let list = '**Blacklisted Servers:**\n\n';
+      for (const serverId of serverBlacklist) {
+        try {
+          const guild = client.guilds.cache.get(serverId);
+          const serverName = guild ? guild.name : 'Unknown Server';
+          list += `• ${serverName} (${serverId})\n`;
+        } catch (e) {
+          list += `• ${serverId}\n`;
+        }
+      }
+      
+      await message.channel.send(list);
     }
 
     else if (command === 'massdm') {
